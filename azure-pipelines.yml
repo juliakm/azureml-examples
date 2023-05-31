@@ -42,3 +42,19 @@ jobs:
 
         # Set output variable for next task
         echo "##vso[task.setvariable variable=JOB_NAME;isOutput=true;]$job_name"
+        
+- job: WaitForAzureMLJobCompletion
+  displayName: Wait for AzureML Job Completion
+  pool: server
+  timeoutInMinutes: 0
+  dependsOn: SubmitAzureMLJob
+  variables: 
+    # We are saving the name of azureMl job submitted in previous step to a variable and it will be used as an inut to the AzureML Job Wait task
+    azureml_job_name_from_submit_job: $[ dependencies.SubmitAzureMLJob.outputs['submit_azureml_job_task.AZUREML_JOB_NAME'] ] 
+  steps:
+  - task: AzureMLJobWaitTask@0
+    inputs:
+      serviceConnection: $(Service_connection)
+      resourceGroupName: $(Resource_Group)
+      azureMLWorkspaceName: $(AzureML_Workspace_Name)
+      azureMLJobName: $(azureml_job_name_from_submit_job)
